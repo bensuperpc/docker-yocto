@@ -21,7 +21,8 @@
 DOCKERFILE := Dockerfile
 DOCKER := docker
 
-BASE_IMAGE_NAME := debian:bullseye
+BASE_IMAGE_NAME := debian
+BASE_IMAGE_TAG := bullseye
 IMAGE_NAME := bensuperpc/yocto
 
 TAG := $(shell date '+%Y%m%d')-$(shell git rev-parse --short HEAD)
@@ -36,7 +37,7 @@ all: build run
 build:
 	$(DOCKER) build -f $(DOCKERFILE) . \
 	-t $(IMAGE_NAME):latest -t $(IMAGE_NAME):$(TAG) \
-	--build-arg BUILD_DATE=$(DATE) --build-arg DOCKER_IMAGE=$(BASE_IMAGE_NAME) \
+	--build-arg BUILD_DATE=$(DATE) --build-arg DOCKER_IMAGE=$(BASE_IMAGE_NAME):$(BASE_IMAGE_TAG) \
 	--build-arg VERSION=$(VERSION)
 
 .PHONY: run
@@ -49,7 +50,7 @@ run:
 .PHONY: update
 update:
 	git pull --recurse-submodules --all --progress
-	echo $(BASE_IMAGE_NAME) | xargs -n1 $(DOCKER) pull
+	echo $(BASE_IMAGE_NAME):$(BASE_IMAGE_TAG) | xargs -n1 $(DOCKER) pull
 
 .PHONY: push
 push:

@@ -22,7 +22,6 @@ LABEL org.label-schema.schema-version="1.0" \
 	  org.label-schema.vcs-ref=$VCS_REF \
 	  org.label-schema.docker.cmd="docker build -t bensuperpc/yocto:latest -f Dockerfile ."
 
-ENV LANG=en_US.utf8
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update && apt-get -y install \
@@ -30,9 +29,18 @@ RUN apt-get update && apt-get -y install \
 	gawk wget git diffstat unzip texinfo chrpath socat cpio xz-utils debianutils iputils-ping libegl1-mesa \
 	python3 python3-pip python3-pexpect python3-subunit pylint3 python3-git python3-jinja2 \
 	libsdl1.2-dev xterm mesa-common-dev zstd liblz4-tool \
-#	--no-install-recommends \
+	ccache ninja-build cmake distcc icecc \
+	apt-transport-https ca-certificates gnupg2 \
+	locales \
 	&& apt-get -y autoremove --purge \
-	&& rm -rf /var/lib/apt/lists/*
+	&& rm -rf /var/lib/apt/lists/* \
+    && update-ca-certificates 
+
+RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && \
+    locale-gen
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
 
 WORKDIR /work
 
