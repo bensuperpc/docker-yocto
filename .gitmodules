@@ -8,7 +8,7 @@
 	path = layers/meta-openembedded
 	url = git://git.openembedded.org/meta-openembedded
 [submodule "layers/openembedded-core"]
-	path = layers/openembedded-core
+	path = openembedded-core
 	url = git://git.openembedded.org/openembedded-core
 [submodule "layers/meta-amd"]
 	path = layers/meta-amd
