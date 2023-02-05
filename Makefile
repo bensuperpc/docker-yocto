@@ -50,3 +50,7 @@ run:
 update:
 	git pull --recurse-submodules --all --progress
 	echo $(BASE_IMAGE_NAME) | xargs -n1 $(DOCKER) pull
+
+.PHONY: push
+push:
+	$(DOCKER) push $(IMAGE_NAME) --all-tags
