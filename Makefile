@@ -40,8 +40,8 @@ build:
 	--build-arg BUILD_DATE=$(DATE) --build-arg DOCKER_IMAGE=$(BASE_IMAGE_NAME):$(BASE_IMAGE_TAG) \
 	--build-arg VERSION=$(VERSION)
 
-.PHONY: run
-run:
+.PHONY: start
+start:
 	$(DOCKER) run -it --rm -v "$(shell pwd):/work" -w /work \
 	-u $(shell id -u ${USER}):$(shell id -g ${USER}) \
 	$(IMAGE_NAME):latest
