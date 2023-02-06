@@ -28,19 +28,17 @@ RUN apt-get update && apt-get -y install \
 	gcc build-essential \
 	gawk wget git diffstat unzip texinfo chrpath socat cpio xz-utils debianutils iputils-ping libegl1-mesa \
 	python3 python3-pip python3-pexpect python3-subunit pylint3 python3-git python3-jinja2 \
-	libsdl1.2-dev xterm mesa-common-dev zstd liblz4-tool \
+	libsdl1.2-dev xterm mesa-common-dev zstd liblz4-tool lz4 zstd unzip xz-utils \
+	x11-utils xvfb \
 	ccache ninja-build cmake distcc icecc \
 	apt-transport-https ca-certificates gnupg2 \
 	locales \
 	&& apt-get -y autoremove --purge \
-	&& rm -rf /var/lib/apt/lists/* \
-    && update-ca-certificates 
+	&& rm -rf /var/lib/apt/lists/*
 
-RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && \
+RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV LC_ALL en_US.UTF-8
+ENV LANG en_US.utf8
 
 WORKDIR /work
 
