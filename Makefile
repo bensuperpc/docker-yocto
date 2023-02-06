@@ -49,7 +49,8 @@ start:
 
 .PHONY: update
 update:
-	git pull --recurse-submodules --all --progress
+#	git pull --recurse-submodules --all --progress
+	git submodule foreach --recursive git pull --all
 	echo $(BASE_IMAGE_NAME):$(BASE_IMAGE_TAG) | xargs -n1 $(DOCKER) pull
 
 .PHONY: push
