@@ -6,7 +6,8 @@ docker-yocto is yocto in docker.
 
 ## Features
 
-- Esay to use
+- Build yocto in docker
+- Multiple available layers
 
 ## Requirements
 
