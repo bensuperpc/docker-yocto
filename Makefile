@@ -30,7 +30,7 @@ DATE := $(shell date '+%Y%m%d')
 VERSION := 1.0.0
 
 .PHONY: all
-all: build run
+all: build start
 
 
 .PHONY: build
