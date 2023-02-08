@@ -25,7 +25,7 @@ git clone --recurse-submodules --remote-submodules https://github.com/bensuperpc
 ```
 
 Checkout the branch you want (**For each submodules/layers**).
-**All branches must be the same on poky/openembedded-core and other submodules/layers.**
+**All branches must be the same version on poky/openembedded-core and other submodules/layers.**
 
 ```sh
 git branch -a # show all branches
@@ -51,33 +51,37 @@ make start
 Now you are in the container, you can build image with yocto.
 Initialize the Build Environment, it will create a build directory.
 
-With poky :
-
-```sh
-source poky/oe-init-build-env build_x86_64 
-```
-
-Or with openembedded-core :
+With openembedded-core :
 
 ```sh
 source openembedded-core/oe-init-build-env build_x86_64 
 ```
 
-Add meta-intel layer
+**Or** with poky (Not for production) :
 
-With poky or openembedded-core :
+```sh
+source poky/oe-init-build-env build_x86_64 
+```
+
+Add meta-intel layer :
 
 ```sh
 bitbake-layers add-layer ../../meta-intel
 ```
 
-Show layers if you want
+Show layers if you want :
 
 ```sh
 bitbake-layers show-layers
 ```
 
-Now you can build !
+Change the MACHINE in conf/local.conf :
+
+```sh
+MACHINE = "intel-corei7-64"
+```
+
+Now you can build the image :
 
 ```sh
 bitbake core-image-full-cmdline
