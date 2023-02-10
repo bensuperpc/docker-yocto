@@ -61,3 +61,6 @@
 [submodule "layers/meta-yocto"]
 	path = layers/meta-yocto
 	url = git://git.yoctoproject.org/meta-yocto
+[submodule "layers/meta-st-stm32mp"]
+	path = layers/meta-st-stm32mp
+	url = git@github.com:STMicroelectronics/meta-st-stm32mp.git
