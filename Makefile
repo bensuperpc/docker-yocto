@@ -89,8 +89,8 @@ clean:
 
 .PHONY: update
 update:
-#	git pull --recurse-submodules --all --progress
+	git pull --recurse-submodules --all --progress
 #	git submodule update --init --recursive
-	git submodule foreach --recursive git pull --all --recurse-submodules
-	echo $(BASE_IMAGE_NAME):$(BASE_IMAGE_TAG) | xargs -n1 $(DOCKER) pull
+#	git submodule foreach --recursive git pull --all --recurse-submodules
+#	echo $(BASE_IMAGE_NAME):$(BASE_IMAGE_TAG) | xargs -n1 $(DOCKER) pull
 
