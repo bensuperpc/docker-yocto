@@ -75,7 +75,7 @@ $(BASE_IMAGE_TAGS):
 
 .SECONDEXPANSION:
 $(addsuffix .test,$(BASE_IMAGE_TAGS)): $$(basename $$@)
-	$(DOCKER) run -d --name test-yocto-$(BASE_IMAGE_NAME)-$(basename $@) $(IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(TAG) ls
+	$(DOCKER) run --rm --name test-yocto-$(BASE_IMAGE_NAME)-$(basename $@) $(IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(TAG) ls
 
 .SECONDEXPANSION:
 $(addsuffix .push,$(BASE_IMAGE_TAGS)): $$(basename $$@)

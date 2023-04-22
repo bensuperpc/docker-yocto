@@ -54,5 +54,5 @@ WORKDIR /work
 #ENV HOME=/home/yocto
 #RUN useradd -s /bin/bash yocto
 
-ENTRYPOINT ["/bin/bash"]
+CMD ["/bin/bash", "-i"]
 
