@@ -67,3 +67,18 @@
 [submodule "layers/meta-mono"]
 	path = layers/meta-mono
 	url = git@github.com:DynamicDevices/meta-mono.git
+[submodule "layers/meta-selinux"]
+	path = layers/meta-selinux
+	url = git://git.yoctoproject.org/meta-selinux
+[submodule "layers/meta-rust-bin"]
+	path = layers/meta-rust-bin
+	url = git@github.com:rust-embedded/meta-rust-bin.git
+[submodule "layers/meta-rust"]
+	path = layers/meta-rust
+	url = https://github.com/meta-rust/meta-rust.git
+[submodule "layers/meta-browser"]
+	path = layers/meta-browser
+	url = https://github.com/OSSystems/meta-browser.git
+[submodule "layers/meta-aws"]
+	path = layers/meta-aws
+	url = git@github.com:aws4embeddedlinux/meta-aws.git
