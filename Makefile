@@ -64,14 +64,15 @@ $(BASE_IMAGE_TAGS):
 		--build-arg BUILD_DATE=$(DATE) --build-arg DOCKER_IMAGE=$(BASE_IMAGE_NAME):$@ \
 		--build-arg VERSION=$(VERSION)
 
-	$(DOCKER) run -it --rm -v "$(shell pwd):/work" --workdir /work --user "$(shell id -u):$(shell id -g)" \
+	$(DOCKER) run -it --rm -v "$(shell pwd):/work:rw" --workdir /work --user "$(shell id -u):$(shell id -g)" \
 		--security-opt no-new-privileges \
-		--cap-drop ALL --tmpfs /tmp:exec --tmpfs /run:exec --cap-add SYS_PTRACE \
 		--cpus $(CPUS) --memory $(MEMORY) \
 		$(IMAGE):$(BASE_IMAGE_NAME)-$@-$(TAG)
 
 #  --read-only --cap-drop ALL --tmpfs /tmp:exec --tmpfs /run:exec --cap-add SYS_PTRACE
 #  -u $(shell id -u ${USER}):$(shell id -g ${USER})
+#  --read-only --tmpfs /tmp:rw ,noexec,nosuid
+# --tmpfs /tmp:noexec,nosuid,size=65536k
 
 .SECONDEXPANSION:
 $(addsuffix .test,$(BASE_IMAGE_TAGS)): $$(basename $$@)
@@ -92,5 +93,5 @@ update:
 	git pull --recurse-submodules --all --progress
 #	git submodule update --init --recursive
 #	git submodule foreach --recursive git pull --all --recurse-submodules
-#	echo $(BASE_IMAGE_NAME):$(BASE_IMAGE_TAG) | xargs -n1 $(DOCKER) pull
+	echo $(BASE_IMAGE_NAME):$(BASE_IMAGE_TAGS) | xargs -n1 $(DOCKER) pull
 
