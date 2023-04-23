@@ -1,4 +1,4 @@
-ARG DOCKER_IMAGE=debian:bullseye
+ARG DOCKER_IMAGE=debian:bookworm
 FROM $DOCKER_IMAGE
 
 ARG VERSION="1.0.0"
@@ -49,6 +49,7 @@ RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen
 ENV LANG en_US.utf8
 
+VOLUME ["/work"]
 WORKDIR /work
 
 #ENV HOME=/home/yocto
