@@ -69,8 +69,17 @@ make build
 Now you can start the container, it will mount the current directory in the container.
 
 ```sh
-make start
+make bookworm
 ```
+
+The table below shows the available debian versions.
+buster bullseye bookworm:
+
+| Debian | Makefile target |
+| ------ | ------ |
+| Bookworm | bookworm |
+| bullseye | bullseye |
+| buster | buster |
 
 ### Build with yocto
 
