@@ -1,11 +1,14 @@
+# syntax=docker/dockerfile:1
 ARG DOCKER_IMAGE=debian:bookworm
-FROM $DOCKER_IMAGE
+FROM $DOCKER_IMAGE as builder
 
 ARG VERSION="1.0.0"
 ENV VERSION=$VERSION
 
 ARG BUILD_DATE
 ARG VCS_REF
+ARG VCS_URL="https://github.com/bensuperpc/docker-yocto"
+ARG PROJECT_NAME
 
 LABEL maintainer="Bensuperpc <bensuperpc@gmail.com>"
 LABEL author="Bensuperpc <bensuperpc@gmail.com>"
@@ -13,12 +16,12 @@ LABEL description="A yocto docker image for building yocto project"
 
 LABEL org.label-schema.schema-version="1.0" \
 	  org.label-schema.build-date=$BUILD_DATE \
-	  org.label-schema.name="bensuperpc/yocto" \
+	  org.label-schema.name=$PROJECT_NAME \
 	  org.label-schema.description="yocto" \
 	  org.label-schema.version=$VERSION \
 	  org.label-schema.vendor="bensuperpc" \
 	  org.label-schema.url="" \
-	  org.label-schema.vcs-url="https://github.com/bensuperpc/docker-yocto" \
+	  org.label-schema.vcs-url=$VCS_URL \
 	  org.label-schema.vcs-ref=$VCS_REF \
 	  org.label-schema.docker.cmd="docker build -t bensuperpc/yocto:latest -f Dockerfile ."
 
@@ -49,8 +52,11 @@ RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen
 ENV LANG en_US.utf8
 
-VOLUME ["/work"]
-WORKDIR /work
+FROM builder as final
+# COPY --from=builder ./app ./app
+
+#VOLUME ["/work"]
+#WORKDIR /work
 
 #ENV HOME=/home/yocto
 #RUN useradd -s /bin/bash yocto
