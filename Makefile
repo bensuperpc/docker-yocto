@@ -18,19 +18,22 @@
 #//                                                          //
 #//////////////////////////////////////////////////////////////
 
-# Base image
-BASE_IMAGE_NAME := debian
-BASE_IMAGE_TAGS := buster bullseye bookworm
-
 # Output docker image
 PROJECT_NAME := yocto
 AUTHOR := bensuperpc
 REGISTRY := docker.io
+WEB_SITE := bensuperpc.org
+
+# Base image
+BASE_IMAGE_NAME := debian
+BASE_IMAGE_TAGS := buster bullseye bookworm
 
 VERSION := 1.0.0
 
+# Max CPU and memory
 CPUS := 8.0
 MEMORY := 8GB
+MEMORY_RESERVATION := 1GB
 
 ARCH_LIST := linux/amd64
 # linux/amd64,linux/amd64/v3, linux/arm64, linux/riscv64, linux/ppc64
@@ -40,6 +43,7 @@ PLATFORMS := $(subst $() $(),$(comma),$(ARCH_LIST))
 IMAGE_NAME := $(PROJECT_NAME)
 OUTPUT_IMAGE := $(AUTHOR)/$(IMAGE_NAME)
 
+# Docker config
 DOCKERFILE := Dockerfile
 DOCKER := docker
 
@@ -50,23 +54,15 @@ GIT_ORIGIN := $(shell git config --get remote.origin.url)
 DATE := $(shell date -u +"%Y%m%d")
 UUID := $(shell uuidgen)
 
-.PHONY: all all.test push clean $(BASE_IMAGE_TAGS)
+.PHONY: all test push pull
 
 all: $(BASE_IMAGE_TAGS)
 
-all.test: $(addsuffix .test,$(BASE_IMAGE_TAGS))
+test: $(addsuffix .test,$(BASE_IMAGE_TAGS))
 
-test: all.test
+push: $(addsuffix .push,$(BASE_IMAGE_TAGS))
 
-all.push: $(addsuffix .push,$(BASE_IMAGE_TAGS))
-
-push: all.push
-
-all.pull: $(addsuffix .pull,$(BASE_IMAGE_TAGS))
-
-pull: all.pull
-
-$(BASE_IMAGE_NAME): all
+pull: $(addsuffix .pull,$(BASE_IMAGE_TAGS))
 
 .PHONY: $(BASE_IMAGE_TAGS)
 $(BASE_IMAGE_TAGS):
@@ -75,9 +71,11 @@ $(BASE_IMAGE_TAGS):
 		--tag $(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$@-$(VERSION)-$(DATE)-$(GIT_SHA) \
 		--tag $(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$@-$(VERSION)-$(DATE) \
 		--tag $(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$@-$(VERSION) \
+		--tag $(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$@ \
 		--build-arg BUILD_DATE=$(DATE) --build-arg DOCKER_IMAGE=$(BASE_IMAGE_NAME):$@ \
 		--build-arg VERSION=$(VERSION) --build-arg PROJECT_NAME=$(PROJECT_NAME) \
-		--build-arg VCS_REF=$(GIT_SHA) --build-arg VCS_URL=$(GIT_ORIGIN)
+		--build-arg VCS_REF=$(GIT_SHA) --build-arg VCS_URL=$(GIT_ORIGIN) \
+		--build-arg AUTHOR=$(AUTHOR) --build-arg URL=$(WEB_SITE)
 		
 
 .SECONDEXPANSION:
@@ -87,11 +85,11 @@ $(addsuffix .run,$(BASE_IMAGE_TAGS)): $$(basename $$@)
 		--mount type=bind,source=$(shell pwd),target=/work \
 		--mount type=tmpfs,target=/tmp,tmpfs-mode=1777,tmpfs-size=4G \
 		--platform $(PLATFORMS) \
-		--cpus $(CPUS) --memory $(MEMORY) \
+		--cpus $(CPUS) --memory $(MEMORY) --memory-reservation $(MEMORY_RESERVATION) \
 		--name $(IMAGE_NAME)-$(BASE_IMAGE_NAME)-$(basename $@)-$(DATE)-$(UUID) \
 		$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)-$(GIT_SHA)
 
-#  --cap-drop ALL --cap-add SYS_PTRACE
+#  --cap-drop ALL --cap-add SYS_PTRACE 		--device=/dev/kvm \
 
 .SECONDEXPANSION:
 $(addsuffix .test,$(BASE_IMAGE_TAGS)): $$(basename $$@)
@@ -99,8 +97,7 @@ $(addsuffix .test,$(BASE_IMAGE_TAGS)): $$(basename $$@)
 		--security-opt no-new-privileges --read-only \
 		--mount type=bind,source=$(shell pwd),target=/work \
 		--mount type=tmpfs,target=/tmp,tmpfs-mode=1777,tmpfs-size=4G \
-		--platform $(PLATFORMS) \
-		--cpus $(CPUS) --memory $(MEMORY) \
+		--cpus $(CPUS) --memory $(MEMORY) --memory-reservation $(MEMORY_RESERVATION) \
 		--name test-$(IMAGE_NAME)-$(BASE_IMAGE_NAME)-$(basename $@) \
 		$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)-$(GIT_SHA) ls
 
@@ -141,8 +138,3 @@ qemu:
 	$(DOCKER) run --rm --privileged multiarch/qemu-user-static --reset -p yes
 	$(DOCKER) buildx create --name qemu_builder --driver docker-container --use
 	$(DOCKER) buildx inspect --bootstrap
-
-
-
-# https://stackoverflow.com/questions/74707530/docker-buildx-fails-to-show-result-in-image-list
-# /\s*#\s*include\s*([<"])([^>"]+)([>"])/gm

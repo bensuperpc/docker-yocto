@@ -1,28 +1,32 @@
 # syntax=docker/dockerfile:1
 ARG DOCKER_IMAGE=debian:bookworm
-FROM $DOCKER_IMAGE as builder
+FROM ${DOCKER_IMAGE} as builder
 
 ARG VERSION="1.0.0"
-ENV VERSION=$VERSION
+ENV VERSION=${VERSION}
 
 ARG BUILD_DATE
 ARG VCS_REF
 ARG VCS_URL="https://github.com/bensuperpc/docker-yocto"
 ARG PROJECT_NAME
+ARG AUTHOR="Bensuperpc"
+ARG URL=""
+
+ARG CCACHE_MAXSIZE=6G
 
 LABEL maintainer="Bensuperpc <bensuperpc@gmail.com>"
 LABEL author="Bensuperpc <bensuperpc@gmail.com>"
 LABEL description="A yocto docker image for building yocto project"
 
 LABEL org.label-schema.schema-version="1.0" \
-	  org.label-schema.build-date=$BUILD_DATE \
-	  org.label-schema.name=$PROJECT_NAME \
+	  org.label-schema.build-date=${BUILD_DATE} \
+	  org.label-schema.name=${PROJECT_NAME} \
 	  org.label-schema.description="yocto" \
-	  org.label-schema.version=$VERSION \
-	  org.label-schema.vendor="bensuperpc" \
-	  org.label-schema.url="" \
-	  org.label-schema.vcs-url=$VCS_URL \
-	  org.label-schema.vcs-ref=$VCS_REF \
+	  org.label-schema.version=${VERSION} \
+	  org.label-schema.vendor=${AUTHOR} \
+	  org.label-schema.url=${URL} \
+	  org.label-schema.vcs-url=${VCS_URL} \
+	  org.label-schema.vcs-ref=${VCS_REF} \
 	  org.label-schema.docker.cmd="docker build -t bensuperpc/yocto:latest -f Dockerfile ."
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -38,10 +42,10 @@ RUN apt-get update && apt-get -y install \
 	apt-transport-https ca-certificates gnupg2 \
 	locales \
 # All needed packages for running yocto images (Qemu and others)
-	qemu-system-x86 qemu-system-arm qemu-system-mips qemu-system-misc \
-	qemu-system-ppc qemu-system-sparc qemu-system-aarch64 qemu-utils \
-	qemu-kvm libvirt-clients libvirt-daemon-system \
-	bridge-utils libguestfs-tools genisoimage virtinst libosinfo-bin \
+#	qemu-system-x86 qemu-system-arm qemu-system-mips qemu-system-misc \
+#	qemu-system-ppc qemu-system-sparc qemu-system-aarch64 qemu-utils \
+#	qemu-kvm libvirt-clients libvirt-daemon-system \
+#	bridge-utils libguestfs-tools genisoimage virtinst libosinfo-bin \
 # Other packages
 	bash-completion htop btop \
 	&& apt-get clean \
@@ -61,5 +65,8 @@ FROM builder as final
 #ENV HOME=/home/yocto
 #RUN useradd -s /bin/bash yocto
 
-CMD ["/bin/bash", "-i"]
+ENV CCACHE_MAXSIZE=${CCACHE_MAXSIZE}
+ENV TERM xterm-256color
+
+CMD ["/bin/bash", "-l"]
 
