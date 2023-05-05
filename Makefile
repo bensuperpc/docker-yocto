@@ -46,6 +46,8 @@ OUTPUT_IMAGE := $(AUTHOR)/$(IMAGE_NAME)
 # Docker config
 DOCKERFILE := Dockerfile
 DOCKER := docker
+DOCKER_DRIVER := --load
+# --push
 
 # Git config
 GIT_SHA := $(shell git rev-parse HEAD)
@@ -65,7 +67,7 @@ push: $(addsuffix .push,$(BASE_IMAGE_TAGS))
 pull: $(addsuffix .pull,$(BASE_IMAGE_TAGS))
 
 .PHONY: $(BASE_IMAGE_TAGS)
-$(BASE_IMAGE_TAGS):
+$(BASE_IMAGE_TAGS): $(Dockerfile)
 	$(DOCKER) buildx build . --file $(DOCKERFILE) \
 		--platform $(PLATFORMS) --progress auto \
 		--tag $(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$@-$(VERSION)-$(DATE)-$(GIT_SHA) \
@@ -75,7 +77,7 @@ $(BASE_IMAGE_TAGS):
 		--build-arg BUILD_DATE=$(DATE) --build-arg DOCKER_IMAGE=$(BASE_IMAGE_NAME):$@ \
 		--build-arg VERSION=$(VERSION) --build-arg PROJECT_NAME=$(PROJECT_NAME) \
 		--build-arg VCS_REF=$(GIT_SHA) --build-arg VCS_URL=$(GIT_ORIGIN) \
-		--build-arg AUTHOR=$(AUTHOR) --build-arg URL=$(WEB_SITE)
+		--build-arg AUTHOR=$(AUTHOR) --build-arg URL=$(WEBSITE) $(DOCKER_DRIVER)
 		
 
 .SECONDEXPANSION:
@@ -89,7 +91,7 @@ $(addsuffix .run,$(BASE_IMAGE_TAGS)): $$(basename $$@)
 		--name $(IMAGE_NAME)-$(BASE_IMAGE_NAME)-$(basename $@)-$(DATE)-$(UUID) \
 		$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)-$(GIT_SHA)
 
-#  --cap-drop ALL --cap-add SYS_PTRACE 		--device=/dev/kvm \
+#  --cap-drop ALL --cap-add SYS_PTRACE 		--device=/dev/kvm
 
 .SECONDEXPANSION:
 $(addsuffix .test,$(BASE_IMAGE_TAGS)): $$(basename $$@)
