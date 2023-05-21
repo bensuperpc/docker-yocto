@@ -47,7 +47,7 @@ RUN apt-get update && apt-get -y install \
 #	qemu-kvm libvirt-clients libvirt-daemon-system \
 #	bridge-utils libguestfs-tools genisoimage virtinst libosinfo-bin \
 # Other packages
-	bash-completion htop btop \
+	bash-completion \
 	&& apt-get clean \
 	&& apt-get -y autoremove --purge \
 	&& rm -rf /var/lib/apt/lists/*

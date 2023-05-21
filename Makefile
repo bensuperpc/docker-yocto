@@ -9,7 +9,7 @@
 #//                                                          //
 #//  Script, 2022                                            //
 #//  Created: 14, April, 2022                                //
-#//  Modified: 22, April, 2023                               //
+#//  Modified: 19, May, 2023                                 //
 #//  file: -                                                 //
 #//  -                                                       //
 #//  Source:                                                 //
@@ -18,22 +18,23 @@
 #//                                                          //
 #//////////////////////////////////////////////////////////////
 
+# Base image
+BASE_IMAGE_REGISTRY := docker.io
+BASE_IMAGE_NAME := debian
+BASE_IMAGE_TAGS := buster bullseye bookworm
+
 # Output docker image
 PROJECT_NAME := yocto
 AUTHOR := bensuperpc
 REGISTRY := docker.io
 WEB_SITE := bensuperpc.org
 
-# Base image
-BASE_IMAGE_NAME := debian
-BASE_IMAGE_TAGS := buster bullseye bookworm
-
 VERSION := 1.0.0
 
 # Max CPU and memory
-CPUS := 8.0
-MEMORY := 8GB
-MEMORY_RESERVATION := 1GB
+CPUS := 16.0
+MEMORY := 16GB
+MEMORY_RESERVATION := 2GB
 
 ARCH_LIST := linux/amd64
 # linux/amd64,linux/amd64/v3, linux/arm64, linux/riscv64, linux/ppc64
@@ -70,15 +71,14 @@ pull: $(addsuffix .pull,$(BASE_IMAGE_TAGS))
 $(BASE_IMAGE_TAGS): $(Dockerfile)
 	$(DOCKER) buildx build . --file $(DOCKERFILE) \
 		--platform $(PLATFORMS) --progress auto \
-		--tag $(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$@-$(VERSION)-$(DATE)-$(GIT_SHA) \
-		--tag $(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$@-$(VERSION)-$(DATE) \
-		--tag $(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$@-$(VERSION) \
-		--tag $(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$@ \
-		--build-arg BUILD_DATE=$(DATE) --build-arg DOCKER_IMAGE=$(BASE_IMAGE_NAME):$@ \
+		--tag $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$@-$(VERSION)-$(DATE)-$(GIT_SHA) \
+		--tag $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$@-$(VERSION)-$(DATE) \
+		--tag $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$@-$(VERSION) \
+		--tag $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$@ \
+		--build-arg BUILD_DATE=$(DATE) --build-arg DOCKER_IMAGE=$(BASE_IMAGE_REGISTRY)/$(BASE_IMAGE_NAME):$@ \
 		--build-arg VERSION=$(VERSION) --build-arg PROJECT_NAME=$(PROJECT_NAME) \
 		--build-arg VCS_REF=$(GIT_SHA) --build-arg VCS_URL=$(GIT_ORIGIN) \
-		--build-arg AUTHOR=$(AUTHOR) --build-arg URL=$(WEBSITE) $(DOCKER_DRIVER)
-		
+		--build-arg AUTHOR=$(AUTHOR) --build-arg URL=$(WEB_SITE) $(DOCKER_DRIVER)
 
 .SECONDEXPANSION:
 $(addsuffix .run,$(BASE_IMAGE_TAGS)): $$(basename $$@)
@@ -89,9 +89,9 @@ $(addsuffix .run,$(BASE_IMAGE_TAGS)): $$(basename $$@)
 		--platform $(PLATFORMS) \
 		--cpus $(CPUS) --memory $(MEMORY) --memory-reservation $(MEMORY_RESERVATION) \
 		--name $(IMAGE_NAME)-$(BASE_IMAGE_NAME)-$(basename $@)-$(DATE)-$(UUID) \
-		$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)-$(GIT_SHA)
+		$(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)-$(GIT_SHA)
 
-#  --cap-drop ALL --cap-add SYS_PTRACE 		--device=/dev/kvm
+#  --cap-drop ALL --cap-add SYS_PTRACE	  --device=/dev/kvm
 
 .SECONDEXPANSION:
 $(addsuffix .test,$(BASE_IMAGE_TAGS)): $$(basename $$@)
@@ -101,16 +101,24 @@ $(addsuffix .test,$(BASE_IMAGE_TAGS)): $$(basename $$@)
 		--mount type=tmpfs,target=/tmp,tmpfs-mode=1777,tmpfs-size=4G \
 		--cpus $(CPUS) --memory $(MEMORY) --memory-reservation $(MEMORY_RESERVATION) \
 		--name test-$(IMAGE_NAME)-$(BASE_IMAGE_NAME)-$(basename $@) \
-		$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)-$(GIT_SHA) ls
+		$(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)-$(GIT_SHA) ls
 
 .SECONDEXPANSION:
 $(addsuffix .push,$(BASE_IMAGE_TAGS)): $$(basename $$@)
-	@echo "Pushing $(REGISTRY)/$(OUTPUT_IMAGE) with all tags"
-	$(DOCKER) push $(REGISTRY)/$(OUTPUT_IMAGE) --all-tags
+	@echo "Pushing $(REGISTRY)/$(OUTPUT_IMAGE)"
+	$(DOCKER) push $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)
+	$(DOCKER) push $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)
+	$(DOCKER) push $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)
+	$(DOCKER) push $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)-$(GIT_SHA)
+#   $(DOCKER) push $(REGISTRY)/$(OUTPUT_IMAGE) --all-tags
 
+.SECONDEXPANSION:
 $(addsuffix .pull,$(BASE_IMAGE_TAGS)):
-	@echo "Pulling $(BASE_IMAGE_NAME):$(basename $@)" 
-	$(DOCKER) pull $(BASE_IMAGE_NAME):$(basename $@)
+	@echo "Pulling $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)" 
+	$(DOCKER) pull $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)
+	$(DOCKER) pull $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)
+	$(DOCKER) pull $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)
+	$(DOCKER) pull $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)-$(GIT_SHA)
 
 .PHONY: clean
 clean:
@@ -125,14 +133,14 @@ purge: clean
 .PHONY: update
 update:
 #   Update all submodules to latest
-#	git submodule update --init --recursive
-	git pull --recurse-submodules --all --progress --jobs=0
-#   git submodule update --recursive --remote --force
+#   git submodule update --init --recursive
+#	git pull --recurse-submodules --all --progress --jobs=0
+	git submodule update --recursive --remote --force --rebase
 #   Update all docker image
 	$(foreach tag,$(BASE_IMAGE_TAGS),$(DOCKER) pull $(BASE_IMAGE_NAME):$(tag);)
 # All docker-compose things
-#	docker compose down  2>/dev/null || true
-#	docker rmi -f $(docker images -f "dangling=true" -q) 2>/dev/null || true
+#   docker compose down  2>/dev/null || true
+#   docker rmi -f $(docker images -f "dangling=true" -q) 2>/dev/null || true
 
 # https://github.com/linuxkit/linuxkit/tree/master/pkg/binfmt
 qemu:
