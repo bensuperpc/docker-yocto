@@ -46,7 +46,7 @@ OUTPUT_IMAGE := $(AUTHOR)/$(IMAGE_NAME)
 
 # Docker config
 DOCKERFILE := Dockerfile
-DOCKER := docker
+DOCKER_EXEC := docker
 DOCKER_DRIVER := --load
 # --push
 
@@ -69,7 +69,7 @@ pull: $(addsuffix .pull,$(BASE_IMAGE_TAGS))
 
 .PHONY: $(BASE_IMAGE_TAGS)
 $(BASE_IMAGE_TAGS): $(Dockerfile)
-	$(DOCKER) buildx build . --file $(DOCKERFILE) \
+	$(DOCKER_EXEC) buildx build . --file $(DOCKERFILE) \
 		--platform $(PLATFORMS) --progress auto \
 		--tag $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$@-$(VERSION)-$(DATE)-$(GIT_SHA) \
 		--tag $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$@-$(VERSION)-$(DATE) \
@@ -82,7 +82,7 @@ $(BASE_IMAGE_TAGS): $(Dockerfile)
 
 .SECONDEXPANSION:
 $(addsuffix .run,$(BASE_IMAGE_TAGS)): $$(basename $$@)
-	$(DOCKER) run -it --rm --workdir /work --user $(shell id -u ${USER}):$(shell id -g ${USER}) \
+	$(DOCKER_EXEC) run -it --rm --workdir /work --user $(shell id -u ${USER}):$(shell id -g ${USER}) \
 		--security-opt no-new-privileges --read-only \
 		--mount type=bind,source=$(shell pwd),target=/work \
 		--mount type=tmpfs,target=/tmp,tmpfs-mode=1777,tmpfs-size=4G \
@@ -95,40 +95,41 @@ $(addsuffix .run,$(BASE_IMAGE_TAGS)): $$(basename $$@)
 
 .SECONDEXPANSION:
 $(addsuffix .test,$(BASE_IMAGE_TAGS)): $$(basename $$@)
-	$(DOCKER) run --rm --workdir /work --user $(shell id -u ${USER}):$(shell id -g ${USER}) \
+	$(DOCKER_EXEC) run -it --rm --workdir /work --user $(shell id -u ${USER}):$(shell id -g ${USER}) \
 		--security-opt no-new-privileges --read-only \
 		--mount type=bind,source=$(shell pwd),target=/work \
 		--mount type=tmpfs,target=/tmp,tmpfs-mode=1777,tmpfs-size=4G \
+		--platform $(PLATFORMS) \
 		--cpus $(CPUS) --memory $(MEMORY) --memory-reservation $(MEMORY_RESERVATION) \
-		--name test-$(IMAGE_NAME)-$(BASE_IMAGE_NAME)-$(basename $@) \
+		--name $(IMAGE_NAME)-$(BASE_IMAGE_NAME)-$(basename $@)-$(DATE)-$(UUID) \
 		$(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)-$(GIT_SHA) ls
 
 .SECONDEXPANSION:
 $(addsuffix .push,$(BASE_IMAGE_TAGS)): $$(basename $$@)
 	@echo "Pushing $(REGISTRY)/$(OUTPUT_IMAGE)"
-	$(DOCKER) push $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)
-	$(DOCKER) push $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)
-	$(DOCKER) push $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)
-	$(DOCKER) push $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)-$(GIT_SHA)
-#   $(DOCKER) push $(REGISTRY)/$(OUTPUT_IMAGE) --all-tags
+	$(DOCKER_EXEC) push $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)
+	$(DOCKER_EXEC) push $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)
+	$(DOCKER_EXEC) push $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)
+	$(DOCKER_EXEC) push $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)-$(GIT_SHA)
+#   $(DOCKER_EXEC) push $(REGISTRY)/$(OUTPUT_IMAGE) --all-tags
 
 .SECONDEXPANSION:
 $(addsuffix .pull,$(BASE_IMAGE_TAGS)):
 	@echo "Pulling $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)" 
-	$(DOCKER) pull $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)
-	$(DOCKER) pull $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)
-	$(DOCKER) pull $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)
-	$(DOCKER) pull $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)-$(GIT_SHA)
+	$(DOCKER_EXEC) pull $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)
+	$(DOCKER_EXEC) pull $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)
+	$(DOCKER_EXEC) pull $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)
+	$(DOCKER_EXEC) pull $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)-$(GIT_SHA)
 
 .PHONY: clean
 clean:
 	@echo "Clean all untagged images"
-	$(DOCKER) images --filter='dangling=true' --format='{{.ID}}' | xargs -r $(DOCKER) rmi -f
+	$(DOCKER_EXEC) images --filter='dangling=true' --format='{{.ID}}' | xargs -r $(DOCKER_EXEC) rmi -f
 
 .PHONY: purge
 purge: clean
 	@echo "Remove all $(OUTPUT_IMAGE) images and tags"
-	$(DOCKER) images --filter='reference=$(OUTPUT_IMAGE)' --format='{{.Repository}}:{{.Tag}}' | xargs -r $(DOCKER) rmi -f
+	$(DOCKER_EXEC) images --filter='reference=$(OUTPUT_IMAGE)' --format='{{.Repository}}:{{.Tag}}' | xargs -r $(DOCKER_EXEC) rmi -f
 
 .PHONY: update
 update:
@@ -137,7 +138,7 @@ update:
 #	git pull --recurse-submodules --all --progress --jobs=0
 	git submodule update --recursive --remote --force --rebase
 #   Update all docker image
-	$(foreach tag,$(BASE_IMAGE_TAGS),$(DOCKER) pull $(BASE_IMAGE_NAME):$(tag);)
+	$(foreach tag,$(BASE_IMAGE_TAGS),$(DOCKER_EXEC) pull $(BASE_IMAGE_NAME):$(tag);)
 # All docker-compose things
 #   docker compose down  2>/dev/null || true
 #   docker rmi -f $(docker images -f "dangling=true" -q) 2>/dev/null || true
@@ -145,6 +146,6 @@ update:
 # https://github.com/linuxkit/linuxkit/tree/master/pkg/binfmt
 qemu:
 	export DOCKER_CLI_EXPERIMENTAL=enabled
-	$(DOCKER) run --rm --privileged multiarch/qemu-user-static --reset -p yes
-	$(DOCKER) buildx create --name qemu_builder --driver docker-container --use
-	$(DOCKER) buildx inspect --bootstrap
+	$(DOCKER_EXEC) run --rm --privileged multiarch/qemu-user-static --reset -p yes
+	$(DOCKER_EXEC) buildx create --name qemu_builder --driver docker-container --use
+	$(DOCKER_EXEC) buildx inspect --bootstrap
