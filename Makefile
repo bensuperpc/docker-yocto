@@ -7,9 +7,9 @@
 #//                             |_|             |_|          //
 #//////////////////////////////////////////////////////////////
 #//                                                          //
-#//  Script, 2022                                            //
-#//  Created: 14, April, 2022                                //
-#//  Modified: 19, May, 2023                                 //
+#//  docker-yocto, 2023                                      //
+#//  Created: 4 February, 2023                               //
+#//  Modified: 01 October, 2023                              //
 #//  file: -                                                 //
 #//  -                                                       //
 #//  Source:                                                 //
@@ -21,7 +21,7 @@
 # Base image
 BASE_IMAGE_REGISTRY := docker.io
 BASE_IMAGE_NAME := debian
-BASE_IMAGE_TAGS := buster bullseye bookworm
+BASE_IMAGE_TAGS := bookworm bullseye buster
 
 # Output docker image
 PROJECT_NAME := yocto
@@ -29,12 +29,21 @@ AUTHOR := bensuperpc
 REGISTRY := docker.io
 WEB_SITE := bensuperpc.org
 
-VERSION := 1.0.0
+IMAGE_VERSION := 1.0.0
+
+USER_NAME := $(shell whoami)
+USER_UID := $(shell id -u ${USER})
+USER_GID := $(shell id -g ${USER})
 
 # Max CPU and memory
-CPUS := 16.0
+CPUS := 8.0
 MEMORY := 16GB
 MEMORY_RESERVATION := 2GB
+TMPFS_SIZE := 4G
+
+TEST_CMD := ls
+
+PROGRESS_OUTPUT := plain
 
 ARCH_LIST := linux/amd64
 # linux/amd64,linux/amd64/v3, linux/arm64, linux/riscv64, linux/ppc64
@@ -57,7 +66,7 @@ GIT_ORIGIN := $(shell git config --get remote.origin.url)
 DATE := $(shell date -u +"%Y%m%d")
 UUID := $(shell uuidgen)
 
-.PHONY: all test push pull
+.PHONY: all test push pull run
 
 all: $(BASE_IMAGE_TAGS)
 
@@ -67,59 +76,78 @@ push: $(addsuffix .push,$(BASE_IMAGE_TAGS))
 
 pull: $(addsuffix .pull,$(BASE_IMAGE_TAGS))
 
+run: $(addsuffix .run,$(BASE_IMAGE_TAGS))
+
 .PHONY: $(BASE_IMAGE_TAGS)
 $(BASE_IMAGE_TAGS): $(Dockerfile)
 	$(DOCKER_EXEC) buildx build . --file $(DOCKERFILE) \
-		--platform $(PLATFORMS) --progress auto \
-		--tag $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$@-$(VERSION)-$(DATE)-$(GIT_SHA) \
-		--tag $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$@-$(VERSION)-$(DATE) \
-		--tag $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$@-$(VERSION) \
+		--platform $(PLATFORMS) --progress $(PROGRESS_OUTPUT) \
+		--tag $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$@-$(IMAGE_VERSION)-$(DATE)-$(GIT_SHA) \
+		--tag $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$@-$(IMAGE_VERSION)-$(DATE) \
+		--tag $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$@-$(IMAGE_VERSION) \
 		--tag $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$@ \
 		--build-arg BUILD_DATE=$(DATE) --build-arg DOCKER_IMAGE=$(BASE_IMAGE_REGISTRY)/$(BASE_IMAGE_NAME):$@ \
-		--build-arg VERSION=$(VERSION) --build-arg PROJECT_NAME=$(PROJECT_NAME) \
+		--build-arg IMAGE_VERSION=$(IMAGE_VERSION) --build-arg PROJECT_NAME=$(PROJECT_NAME) \
 		--build-arg VCS_REF=$(GIT_SHA) --build-arg VCS_URL=$(GIT_ORIGIN) \
-		--build-arg AUTHOR=$(AUTHOR) --build-arg URL=$(WEB_SITE) $(DOCKER_DRIVER)
-
-.SECONDEXPANSION:
-$(addsuffix .run,$(BASE_IMAGE_TAGS)): $$(basename $$@)
-	$(DOCKER_EXEC) run -it --rm --workdir /work --user $(shell id -u ${USER}):$(shell id -g ${USER}) \
-		--security-opt no-new-privileges --read-only \
-		--mount type=bind,source=$(shell pwd),target=/work \
-		--mount type=tmpfs,target=/tmp,tmpfs-mode=1777,tmpfs-size=4G \
-		--platform $(PLATFORMS) \
-		--cpus $(CPUS) --memory $(MEMORY) --memory-reservation $(MEMORY_RESERVATION) \
-		--name $(IMAGE_NAME)-$(BASE_IMAGE_NAME)-$(basename $@)-$(DATE)-$(UUID) \
-		$(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)-$(GIT_SHA)
+		--build-arg AUTHOR=$(AUTHOR) --build-arg URL=$(WEB_SITE) \
+		--build-arg USER_NAME=$(USER_NAME) --build-arg USER_UID=$(USER_UID) --build-arg USER_GID=$(USER_GID) \
+		$(DOCKER_DRIVER)
 
 #  --cap-drop ALL --cap-add SYS_PTRACE	  --device=/dev/kvm
 
 .SECONDEXPANSION:
 $(addsuffix .test,$(BASE_IMAGE_TAGS)): $$(basename $$@)
-	$(DOCKER_EXEC) run -it --rm --workdir /work --user $(shell id -u ${USER}):$(shell id -g ${USER}) \
+	$(DOCKER_EXEC) run -it --rm \
 		--security-opt no-new-privileges --read-only \
 		--mount type=bind,source=$(shell pwd),target=/work \
-		--mount type=tmpfs,target=/tmp,tmpfs-mode=1777,tmpfs-size=4G \
+		--mount type=tmpfs,target=/tmp,tmpfs-mode=1777,tmpfs-size=$(TMPFS_SIZE) \
 		--platform $(PLATFORMS) \
 		--cpus $(CPUS) --memory $(MEMORY) --memory-reservation $(MEMORY_RESERVATION) \
-		--name $(IMAGE_NAME)-$(BASE_IMAGE_NAME)-$(basename $@)-$(DATE)-$(UUID) \
-		$(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)-$(GIT_SHA) ls
+		--name $(IMAGE_NAME)-$(BASE_IMAGE_NAME)-$(basename $@)-$(DATE)-$(GIT_SHA)-$(UUID) \
+		$(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(IMAGE_VERSION)-$(DATE)-$(GIT_SHA) \
+		$(TEST_CMD)
+# --workdir /work --user $(shell id -u ${USER}):$(shell id -g ${USER})
+
+.SECONDEXPANSION:
+$(addsuffix .run,$(BASE_IMAGE_TAGS)): $$(basename $$@)
+	$(DOCKER_EXEC) run -it --rm \
+		--security-opt no-new-privileges \
+		--mount type=bind,source=$(shell pwd),target=/work \
+		--mount type=tmpfs,target=/tmp,tmpfs-mode=1777,tmpfs-size=$(TMPFS_SIZE) \
+		--platform $(PLATFORMS) \
+		--cpus $(CPUS) --memory $(MEMORY) --memory-reservation $(MEMORY_RESERVATION) \
+		--name $(IMAGE_NAME)-$(BASE_IMAGE_NAME)-$(basename $@)-$(DATE)-$(GIT_SHA)-$(UUID) \
+		$(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(IMAGE_VERSION)-$(DATE)-$(GIT_SHA)
+
 
 .SECONDEXPANSION:
 $(addsuffix .push,$(BASE_IMAGE_TAGS)): $$(basename $$@)
 	@echo "Pushing $(REGISTRY)/$(OUTPUT_IMAGE)"
 	$(DOCKER_EXEC) push $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)
-	$(DOCKER_EXEC) push $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)
-	$(DOCKER_EXEC) push $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)
-	$(DOCKER_EXEC) push $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)-$(GIT_SHA)
+	$(DOCKER_EXEC) push $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(IMAGE_VERSION)
+	$(DOCKER_EXEC) push $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(IMAGE_VERSION)-$(DATE)
+	$(DOCKER_EXEC) push $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(IMAGE_VERSION)-$(DATE)-$(GIT_SHA)
 #   $(DOCKER_EXEC) push $(REGISTRY)/$(OUTPUT_IMAGE) --all-tags
 
 .SECONDEXPANSION:
-$(addsuffix .pull,$(BASE_IMAGE_TAGS)):
+$(addsuffix .pull,$(BASE_IMAGE_TAGS)): $$(basename $$@)
 	@echo "Pulling $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)" 
 	$(DOCKER_EXEC) pull $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)
-	$(DOCKER_EXEC) pull $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)
-	$(DOCKER_EXEC) pull $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)
-	$(DOCKER_EXEC) pull $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(VERSION)-$(DATE)-$(GIT_SHA)
+	$(DOCKER_EXEC) pull $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(IMAGE_VERSION)
+	$(DOCKER_EXEC) pull $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(IMAGE_VERSION)-$(DATE)
+	$(DOCKER_EXEC) pull $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(IMAGE_VERSION)-$(DATE)-$(GIT_SHA)
+
+.SECONDEXPANSION:
+$(addsuffix .save,$(BASE_IMAGE_TAGS)): $$(basename $$@)
+#	docker save $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(IMAGE_VERSION) | xz -e7 -v -T0 > $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(IMAGE_VERSION).tar.xz
+
+#   Bash version
+#	DOCKER_IMAGE=ben/ben:ben; install -Dv /dev/null "$DOCKER_IMAGE".tar.xz && docker pull "$DOCKER_IMAGE" && docker save "$DOCKER_IMAGE" | xz -e7 -v -T0 > "$DOCKER_IMAGE".tar.xz
+
+.SECONDEXPANSION:
+$(addsuffix .load,$(BASE_IMAGE_TAGS)): $$(basename $$@)
+	@echo "Not implemented yet"
+#	xz -v -d -k < $(REGISTRY)/$(OUTPUT_IMAGE):$(BASE_IMAGE_NAME)-$(basename $@)-$(IMAGE_VERSION).tar.xz | docker load
 
 .PHONY: clean
 clean:

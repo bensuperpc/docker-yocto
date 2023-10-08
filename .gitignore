@@ -1,7 +1,2 @@
 builds/*
-!builds/.gitkeep
 .vscode/settings.json
-compose/docker_compose.env
-compose/docker-compose.main.yml
-compose/Dockerfile
-compose/Makefile

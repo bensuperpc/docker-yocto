@@ -27,16 +27,20 @@ jobs:
           tag: 'all'
     steps:
       - name: "Checkout Code"
-        uses: actions/checkout@v3.3.0
+        uses: actions/checkout@v3.5.3
         with:
-          submodules: 'recursive'
-          fetch-depth: 0
+#          submodules: 'recursive'
+          fetch-depth: 1
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install 
       - name: Build
         run: make ${{ matrix.images.image }}
-      - name: Test
+      - name: Test the image
         run: make ${{ matrix.images.image }}.test
+      - name: clean the image
+        run: make ${{ matrix.images.image }}.clean
+      - name: purge the image
+        run: make ${{ matrix.images.image }}.purge
 #      - name: "Push to hub.docker.com"
 #        if: github.ref == 'refs/heads/main'
 #        run: |

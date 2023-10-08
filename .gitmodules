@@ -1,5 +1,5 @@
 [submodule "poky"]
-	path = poky
+	path = layers/poky
 	url = git://git.yoctoproject.org/poky
 [submodule "layers/meta-intel"]
 	path = layers/meta-intel
@@ -8,7 +8,7 @@
 	path = layers/meta-openembedded
 	url = git://git.openembedded.org/meta-openembedded
 [submodule "layers/openembedded-core"]
-	path = openembedded-core
+	path = layers/openembedded-core
 	url = git://git.openembedded.org/openembedded-core
 [submodule "layers/meta-amd"]
 	path = layers/meta-amd
@@ -41,7 +41,7 @@
 	path = layers/meta-ti
 	url = git://git.yoctoproject.org/meta-ti
 [submodule "bitbake"]
-	path = bitbake
+	path = tools/bitbake
 	url = git://git.openembedded.org/bitbake
 [submodule "layers/meta-linaro"]
 	path = layers/meta-linaro
@@ -82,3 +82,33 @@
 [submodule "layers/meta-aws"]
 	path = layers/meta-aws
 	url = git@github.com:aws4embeddedlinux/meta-aws.git
+[submodule "layers/meta-atmel"]
+	path = layers/meta-atmel
+	url = git@github.com:linux4sam/meta-atmel.git
+[submodule "layers/meta-odroid"]
+	path = layers/meta-odroid
+	url = git@github.com:akuster/meta-odroid.git
+[submodule "layers/meta-freertos"]
+	path = layers/meta-freertos
+	url = git@github.com:ahcbb6/meta-freertos.git
+[submodule "layers/meta-linux-mainline"]
+	path = layers/meta-linux-mainline
+	url = https://github.com/unnecessary-abstraction/meta-linux-mainline.git
+[submodule "layers/meta-smartphone"]
+	path = layers/meta-smartphone
+	url = git@github.com:shr-distribution/meta-smartphone.git
+[submodule "layers/meta-raspberrypi-baremeta"]
+	path = layers/meta-raspberrypi-baremeta
+	url = https://github.com/ahcbb6/meta-raspberrypi-baremetal.git
+[submodule "layers/meta-raspberrypi-baremetal"]
+	path = layers/meta-raspberrypi-baremetal
+	url = https://github.com/ahcbb6/meta-raspberrypi-baremetal.git
+[submodule "tools/yocto-cooker"]
+	path = tools/yocto-cooker
+	url = https://github.com/cpb-/yocto-cooker.git
+[submodule "docs/yocto-docs"]
+	path = docs/yocto-docs
+	url = git://git.yoctoproject.org/yocto-docs
+[submodule "layers/meta-tensorflow"]
+	path = layers/meta-tensorflow
+	url = git://git.yoctoproject.org/meta-tensorflow

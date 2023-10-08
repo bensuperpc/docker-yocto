@@ -1,0 +1,34 @@
+{
+  "sources" : [
+    { "url": "git://git.openembedded.org/meta-openembedded", "branch": "kirkstone", "rev": "HEAD" },
+    { "url": "git://git.yoctoproject.org/poky", "branch": "kirkstone", "rev": "HEAD" },
+    { "url": "git://git.yoctoproject.org/meta-raspberrypi", "branch": "kirkstone", "rev": "HEAD" }
+  ],
+
+  "layers" : [
+    "poky/meta",
+    "poky/meta-poky",
+    "poky/meta-yocto-bsp",
+    "meta-openembedded/meta-oe",
+    "meta-raspberrypi"
+  ],
+
+  "local.conf": [
+    "BB_NUMBER_THREADS = '8' ",
+    "PARALLEL_MAKE = '-j 8' ",
+    "INHERIT += ' ccache'"
+  ],
+
+  "builds" : {
+    "base-raspberrypi4-64": {
+      "target" : "core-image-base",
+      "local.conf": [
+        "MACHINE = 'raspberrypi4-64' ",
+        "DISTRO = 'poky' ",
+        "EXTRA_IMAGE_FEATURES = 'debug-tweaks package-management' ",
+        "IMAGE_FSTYPES = 'tar.bz2 ext4 wic.bz2 wic.bmap wic' ",
+        "IMAGE_FEATURES += ' empty-root-password' "
+      ]
+    }
+  }
+}

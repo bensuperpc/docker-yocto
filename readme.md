@@ -46,21 +46,19 @@ With this configuration, you can build a core-image-full-cmdline for intel-corei
 
 Clone this repository
 
-```sh
+```bash
+git clone https://github.com/bensuperpc/docker-yocto.git
+```
+
+If you want to use submodules, you can clone with submodules.
+
+```bash
 git clone --recurse-submodules --remote-submodules https://github.com/bensuperpc/docker-yocto.git
-```
-
-Checkout the branch you want (**For each submodules/layers**).
-**All branches must be the same version on poky/openembedded-core and other submodules/layers.**
-
-```sh
-git branch -a # show all branches on submodules/layers or poky/openembedded-core
-git checkout -t origin/langdale -b my-langdale # checkout the branch and create a new branch
-```
+``` 
 
 ### Build with docker
 
-```sh
+```bash
 make build
 ```
 
@@ -68,8 +66,8 @@ make build
 
 Now you can start the container, it will mount the current directory in the container.
 
-```sh
-make bookworm
+```bash
+make bookworm.run
 ```
 
 The table below shows the available debian versions.
@@ -81,50 +79,100 @@ buster bullseye bookworm:
 | bullseye | bullseye |
 | buster | buster |
 
-### Build with yocto
+### Build image (With cooker)
 
 Now you are in the container, you can build image with yocto.
-Initialize the Build Environment, it will create a build directory.
+You can use cooker to build image, it easy to use.
+We target *base-raspberrypi4-64* build from *demo-cooker.json*.
+
+```bash
+cooker cook demo-cooker.json base-raspberrypi4-64
+```
+
+You can use some options with cooker: 
+
+| Option | Description |
+| ------ | ------ |
+| --download | Only download the sources and not build the image |
+| --sdk | Build the SDK after the image |
+| --keepgoing | Continue as much as possible after an error |
+| --version | Show the version of cooker |
+
+### Build image (With bitbake)
+
+If you want to use bitbake, you can use it. (**You need submodules**)
+
+Checkout the branch you want (**For each submodules/layers**).
+**All branches must be the same version on poky/openembedded-core and other submodules/layers.**
+
+```bash
+git branch -a # show all branches on submodules/layers or poky/openembedded-core
+git checkout -t origin/langdale -b my-langdale # checkout the branch and create a new branch
+```
 
 With openembedded-core :
 
-```sh
-source openembedded-core/oe-init-build-env build_x86_64 
+```bash
+source layers/openembedded-core/oe-init-build-env base-raspberrypi4-64
 ```
 
-**Or** with poky (Not for production) :
+**Or** with poky :
 
-```sh
-source poky/oe-init-build-env build_x86_64 
+```bash
+source layers/poky/oe-init-build-env base-raspberrypi4-64 
 ```
 
-Add meta-intel layer :
+Add meta layer :
 
-```sh
-bitbake-layers add-layer ../../meta-intel
+```bash
+bitbake-layers add-layer ../meta
+```
+
+Add meta-poky layer :
+
+```bash
+bitbake-layers add-layer ../meta-poky
+```
+
+Add meta-oe layer :
+
+```bash
+bitbake-layers add-layer ../openembedded-core/meta-oe
+```
+
+Add meta-raspberrypi layer :
+
+```bash
+bitbake-layers add-layer ../layers/meta-raspberrypi
 ```
 
 Show layers if you want :
 
-```sh
+```bash
 bitbake-layers show-layers
 ```
 
 Change the MACHINE in conf/local.conf :
 
-```sh
-MACHINE = "intel-corei7-64"
+```bash
+MACHINE = "raspberrypi4-64"
+```
+
+Change the DISTRO in conf/local.conf :
+
+```bash
+DISTRO = "poky"
 ```
 
 Now you can build the image :
 
-```sh
-bitbake core-image-full-cmdline
+```bash
+bitbake core-image-base
 ```
 
 Now you can exit the container when the build is finished.
 
-```sh
+```bash
 exit
 ```
 
@@ -132,16 +180,15 @@ All the build is in the **"builds"** directory.
 
 ## Update submodules and base debian image
 
-```sh
+```bash
 make update
 ```
 
 ## Useful links
 
 - [Layerindex](https://layers.openembedded.org/layerindex/branch/master/layers/)
-
-## Tech
-
+- [Yocto Project Reference Manual](https://docs.yoctoproject.org/ref-manual/)
+- [Cooker](https://www.blaess.fr/christophe/2022/01/13/yocto-cooker-1-3/)
 - [yocto](https://www.yoctoproject.org)
 
 ## License
