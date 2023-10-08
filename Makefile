@@ -97,7 +97,7 @@ $(BASE_IMAGE_TAGS): $(Dockerfile)
 
 .SECONDEXPANSION:
 $(addsuffix .test,$(BASE_IMAGE_TAGS)): $$(basename $$@)
-	$(DOCKER_EXEC) run -it --rm \
+	$(DOCKER_EXEC) run --rm \
 		--security-opt no-new-privileges --read-only \
 		--mount type=bind,source=$(shell pwd),target=/work \
 		--mount type=tmpfs,target=/tmp,tmpfs-mode=1777,tmpfs-size=$(TMPFS_SIZE) \
@@ -110,7 +110,7 @@ $(addsuffix .test,$(BASE_IMAGE_TAGS)): $$(basename $$@)
 
 .SECONDEXPANSION:
 $(addsuffix .run,$(BASE_IMAGE_TAGS)): $$(basename $$@)
-	$(DOCKER_EXEC) run -it --rm \
+	$(DOCKER_EXEC) run -it \
 		--security-opt no-new-privileges \
 		--mount type=bind,source=$(shell pwd),target=/work \
 		--mount type=tmpfs,target=/tmp,tmpfs-mode=1777,tmpfs-size=$(TMPFS_SIZE) \
@@ -152,7 +152,7 @@ $(addsuffix .load,$(BASE_IMAGE_TAGS)): $$(basename $$@)
 .PHONY: clean
 clean:
 	@echo "Clean all untagged images"
-	$(DOCKER_EXEC) images --filter='dangling=true' --format='{{.ID}}' | xargs -r $(DOCKER_EXEC) rmi -f
+	$(DOCKER_EXEC) image prune --force --filter="dangling=true"
 
 .PHONY: purge
 purge: clean

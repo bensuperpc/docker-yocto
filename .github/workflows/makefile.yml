@@ -36,7 +36,7 @@ jobs:
       - name: Build
         run: make ${{ matrix.images.image }}
       - name: Test the image
-        run: make ${{ matrix.images.image }}.test
+        run: CPUS=2.0 make ${{ matrix.images.image }}.test
       - name: clean the image
         run: make ${{ matrix.images.image }}.clean
       - name: purge the image
