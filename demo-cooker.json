@@ -1,8 +1,8 @@
 {
   "sources" : [
-    { "url": "git://git.openembedded.org/meta-openembedded", "branch": "kirkstone", "rev": "HEAD" },
-    { "url": "git://git.yoctoproject.org/poky", "branch": "kirkstone", "rev": "HEAD" },
-    { "url": "git://git.yoctoproject.org/meta-raspberrypi", "branch": "kirkstone", "rev": "HEAD" }
+    { "url": "git://git.openembedded.org/meta-openembedded", "branch": "kirkstone", "rev": "9c5541f7e18a1fac3b8dea71e1ebb8398d58e6ff" },
+    { "url": "git://git.yoctoproject.org/poky", "branch": "kirkstone", "rev": "ef5214f584765810e94a6f61585ccbcd9b909502" },
+    { "url": "git://git.yoctoproject.org/meta-raspberrypi", "branch": "kirkstone", "rev": "59a6a1b5dd1e21189adec49c61eae04ed3e70338" }
   ],
 
   "layers" : [
