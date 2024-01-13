@@ -14,8 +14,10 @@
   ],
 
   "local.conf": [
-    "BB_NUMBER_THREADS = '8' ",
-    "PARALLEL_MAKE = '-j 8' ",
+    "BB_NUMBER_THREADS = '2' ",
+    "BB_NUMBER_PARSE_THREADS = '2' ",
+    "PARALLEL_MAKE = '-j 2' ",
+    "PARALLEL_MAKEINST = '-j 2' ",
     "INHERIT += ' ccache'"
   ],
 
@@ -25,9 +27,23 @@
       "local.conf": [
         "MACHINE = 'raspberrypi4-64' ",
         "DISTRO = 'poky' ",
-        "EXTRA_IMAGE_FEATURES = 'debug-tweaks package-management' ",
+        "PACKAGE_CLASSES = 'package_rpm' ",
+        "EXTRA_IMAGE_FEATURES = 'debug-tweaks package-management splash' ",
+        "IMAGE_INSTALL:append = ' nano' ",
         "IMAGE_FSTYPES = 'tar.bz2 ext4 wic.bz2 wic.bmap wic' ",
-        "IMAGE_FEATURES += ' empty-root-password' "
+        "IMAGE_FEATURES:append = ' empty-root-password' "
+      ]
+    },
+    "sato-raspberrypi4-64": {
+      "target" : "core-image-sato",
+      "local.conf": [
+        "MACHINE = 'raspberrypi4-64' ",
+        "DISTRO = 'poky' ",
+        "PACKAGE_CLASSES = 'package_rpm' ",
+        "EXTRA_IMAGE_FEATURES = 'debug-tweaks splash package-management' ",
+        "IMAGE_INSTALL:append = ' nano' ",
+        "IMAGE_FSTYPES = 'tar.bz2 ext4 wic.bz2 wic.bmap wic' ",
+        "IMAGE_FEATURES:append = ' empty-root-password' "
       ]
     }
   }

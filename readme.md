@@ -83,10 +83,10 @@ buster bullseye bookworm:
 
 Now you are in the container, you can build image with yocto.
 You can use cooker to build image, it easy to use.
-We target *base-raspberrypi4-64* build from *demo-cooker.json*.
+We target *base-raspberrypi4-64* build from *raspberrypi4-64.json* file.
 
 ```bash
-cooker cook demo-cooker.json base-raspberrypi4-64
+cooker cook raspberrypi4-64.json base-raspberrypi4-64
 ```
 
 You can use some options with cooker: 
@@ -107,7 +107,7 @@ Checkout the branch you want (**For each submodules/layers**).
 
 ```bash
 git branch -a # show all branches on submodules/layers or poky/openembedded-core
-git checkout -t origin/langdale -b my-langdale # checkout the branch and create a new branch
+git checkout -t origin/kirkstone -b my-kirkstone # checkout the branch and create a new branch
 ```
 
 With openembedded-core :

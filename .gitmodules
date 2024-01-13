@@ -41,7 +41,7 @@
 	path = layers/meta-ti
 	url = git://git.yoctoproject.org/meta-ti
 [submodule "bitbake"]
-	path = tools/bitbake
+	path = layers/bitbake
 	url = git://git.openembedded.org/bitbake
 [submodule "layers/meta-linaro"]
 	path = layers/meta-linaro
@@ -104,7 +104,7 @@
 	path = layers/meta-raspberrypi-baremetal
 	url = https://github.com/ahcbb6/meta-raspberrypi-baremetal.git
 [submodule "tools/yocto-cooker"]
-	path = tools/yocto-cooker
+	path = layers/yocto-cooker
 	url = https://github.com/cpb-/yocto-cooker.git
 [submodule "docs/yocto-docs"]
 	path = docs/yocto-docs

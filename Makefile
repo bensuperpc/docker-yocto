@@ -164,7 +164,13 @@ update:
 #   Update all submodules to latest
 #   git submodule update --init --recursive
 #	git pull --recurse-submodules --all --progress --jobs=0
-	git submodule update --recursive --remote --force --rebase
+
+	git submodule foreach --recursive git clean -xfd
+	git submodule foreach --recursive git reset --hard
+#	git submodule update --init --recursive
+#	git submodule update --recursive --remote --force --rebase
+	git submodule update --recursive --init --remote --force
+
 #   Update all docker image
 	$(foreach tag,$(BASE_IMAGE_TAGS),$(DOCKER_EXEC) pull $(BASE_IMAGE_NAME):$(tag);)
 # All docker-compose things

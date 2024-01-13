@@ -1,0 +1,46 @@
+{
+  "sources" : [
+    { "url": "git://git.openembedded.org/meta-openembedded", "branch": "kirkstone", "rev": "9c5541f7e18a1fac3b8dea71e1ebb8398d58e6ff" },
+    { "url": "git://git.yoctoproject.org/poky", "branch": "kirkstone", "rev": "ef5214f584765810e94a6f61585ccbcd9b909502" }
+  ],
+
+  "layers" : [
+    "poky/meta",
+    "poky/meta-poky",
+    "poky/meta-yocto-bsp",
+    "meta-openembedded/meta-oe"
+  ],
+
+  "local.conf": [
+    "BB_NUMBER_THREADS = '2' ",
+    "BB_NUMBER_PARSE_THREADS = '2' ",
+    "PARALLEL_MAKE = '-j 2' ",
+    "PARALLEL_MAKEINST = '-j 2' ",
+    "INHERIT += ' ccache'"
+  ],
+
+  "builds" : {
+    "base-qemux86-64": {
+      "target" : "core-image-base",
+      "local.conf": [
+        "MACHINE = 'qemux86-64' ",
+        "DISTRO = 'poky' ",
+        "PACKAGE_CLASSES = 'package_rpm' ",
+        "EXTRA_IMAGE_FEATURES = 'debug-tweaks splash package-management' ",
+        "IMAGE_INSTALL:append = ' nano' ",
+        "IMAGE_FEATURES:append = ' empty-root-password' "
+      ]
+    },
+    "sato-qemux86-64": {
+      "target" : "core-image-sato",
+      "local.conf": [
+        "MACHINE = 'qemux86-64' ",
+        "DISTRO = 'poky' ",
+        "PACKAGE_CLASSES = 'package_rpm' ",
+        "EXTRA_IMAGE_FEATURES = 'debug-tweaks splash package-management' ",
+        "IMAGE_INSTALL:append = ' nano' ",
+        "IMAGE_FEATURES:append = ' empty-root-password' "
+      ]
+    }
+  }
+}

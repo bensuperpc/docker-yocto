@@ -1,0 +1,8 @@
+{
+    "menu": "raylib.json",
+    "layer-dir": "layers",
+    "build-dir": "builds",
+    "dl-dir": "downloads",
+    "sstate-dir": "sstate-cache",
+    "cooker-config-version": 1
+}
