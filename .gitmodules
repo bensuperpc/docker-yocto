@@ -112,3 +112,6 @@
 [submodule "layers/meta-tensorflow"]
 	path = layers/meta-tensorflow
 	url = git://git.yoctoproject.org/meta-tensorflow
+[submodule "layers/bensuperpc/meta-raylib"]
+	path = layers/bensuperpc/meta-raylib
+	url = https://github.com/bensuperpc/meta-raylib.git
