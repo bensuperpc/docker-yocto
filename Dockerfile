@@ -83,8 +83,8 @@ USER $USER_NAME
 
 WORKDIR /home/$USER_NAME
 
-#VOLUME ["/work"]
-#WORKDIR /work
+VOLUME ["/work"]
+WORKDIR /work
 
 #RUN cooker --version
 
